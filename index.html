@@ -51,6 +51,12 @@ button{font:inherit;cursor:pointer}
 .hints .body{flex:1}
 .ansbtn{margin-top:8px;padding:6px 14px;border-radius:10px;border:2px solid var(--main);background:#fff;color:var(--main);font-weight:700;font-size:16px}
 .ansbtn:disabled{border-color:var(--line);color:#a3a6ab;cursor:default}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.btns .ansbtn{margin-top:0}
+.skipbtn{padding:6px 12px;border-radius:10px;border:2px solid var(--line);background:#fff;color:var(--sub);font-size:15px;font-family:"Nunito",sans-serif;font-weight:700}
+.hints li.skipped{opacity:.55;background:#f3f1ec}
+.hints li.skipped .num{background:#a3a6ab}
+.hints li.skipped p.h{text-decoration:line-through}
 .ans{margin-top:8px !important;font-family:"Nunito",sans-serif}
 .ans s{color:var(--red)}
 .ans b{color:var(--green)}
@@ -81,11 +87,12 @@ const LS = "ewrite_v1";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-function fresh(keep){ return {name: keep?.name || "", grade: keep?.grade || 0, phase: "start", attempts: [], rewriting: false, draft: "", msg: ""}; }
+function fresh(keep){ return {name: keep?.name || "", grade: keep?.grade || 0, phase: "start", attempts: [], rewriting: false, draft: "", msg: "", skips: []}; }
 function load(){ try{ return JSON.parse(localStorage.getItem(LS)); }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
 let S = load() || fresh();
-S.msg = "";
+S.msg = ""; S.skips = S.skips || [];
+const active = errs => errs.filter(e => !e.skipped);
 
 /* ---------------- 화면 ---------------- */
 function render(){
@@ -119,31 +126,37 @@ function vWrite(){
     <div class="count" id="wc"></div>
     ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
     <button class="big" onclick="submitText()">제출하기</button>
-  </section>`;
+  </section>
+  <button class="ghost" onclick="newWriting()">🆕 새 글 쓰기</button>`;
 }
 
 function vResult(){
   const n = S.attempts.length, cur = S.attempts[n-1], errs = cur.errors;
-  const unlocked = n >= 2;
+  const unlocked = n >= 2, left = active(errs).length;
   return `
   <div class="bar"><span><b>${esc(S.name)}</b> · ${S.grade}학년</span><span>${n}번째 글</span></div>
   <section class="card">
-    <h2>🔍 고칠 곳이 ${errs.length}개 있어요</h2>
+    <h2>${left ? `🔍 고칠 곳이 ${left}개 있어요` : "✅ 남은 고칠 곳이 없어요"}</h2>
     ${cur.good ? `<p class="good">👍 ${esc(cur.good)}</p>` : ""}
     <div class="paper">${markText(cur.text, errs)}</div>
     <ol class="hints">
       ${errs.map((e,i) => `
-      <li id="h${i}">
+      <li id="h${i}" class="${e.skipped ? "skipped" : ""}">
         <span class="num">${i+1}</span>
         <div class="body">
-          <p>${esc(e.hint)}</p>
-          ${!unlocked ? `<button class="ansbtn" disabled>🔒 정답 보기</button>`
-            : e.shown ? `<p class="ans">✅ <s>${esc(e.wrong)}</s> → <b>${esc(e.correct)}</b></p>`
-            : `<button class="ansbtn" onclick="showAns(${i})">정답 보기</button>`}
+          <p class="h">${esc(e.hint)}</p>
+          ${e.skipped ? `<div class="btns"><span class="note" style="margin:0">넘겼어요 (AI가 잘못 찾은 것 같아요)</span><button class="skipbtn" onclick="skipErr(${i},false)">되돌리기</button></div>`
+          : `<div class="btns">
+            ${!unlocked ? `<button class="ansbtn" disabled>🔒 정답 보기</button>`
+              : e.shown ? `<p class="ans" style="margin:0 !important">✅ <s>${esc(e.wrong)}</s> → <b>${esc(e.correct)}</b></p>`
+              : `<button class="ansbtn" onclick="showAns(${i})">정답 보기</button>`}
+            <button class="skipbtn" onclick="skipErr(${i},true)">Skip</button>
+          </div>`}
         </div>
       </li>`).join("")}
     </ol>
     ${!unlocked ? `<p class="note">🔒 정답은 한 번 다시 적어 본 뒤에 볼 수 있어요. 힌트를 보고 스스로 고쳐 보세요!</p>` : ""}
+    <p class="note">AI가 맞는 걸 틀렸다고 했으면 [Skip]을 눌러 넘겨요.</p>
   </section>
   ${S.rewriting ? `
   <section class="card" id="rw">
@@ -155,12 +168,13 @@ function vResult(){
   </section>` : `
   ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
   <button class="big" onclick="startRewrite()">✍️ 다시 적기</button>
-  ${unlocked ? `<button class="ghost" onclick="finish()">이대로 마치기</button>` : ""}`}`;
+  ${unlocked || !left ? `<button class="ghost" onclick="finish()">${left ? "이대로 마치기" : "✅ 마치기"}</button>` : ""}`}
+  <button class="ghost" onclick="newWriting()">🆕 새 글 쓰기</button>`;
 }
 
 function vDone(){
   const first = S.attempts[0], last = S.attempts[S.attempts.length-1];
-  const left = last.errors.length;
+  const left = active(last.errors).length;
   return `
   <section class="card done-top">
     <div class="emoji">${left ? "👏" : "🎉"}</div>
@@ -186,7 +200,7 @@ function locate(text, errs){
   });
 }
 function markText(text, errs){
-  const list = errs.map((e,i) => ({...e, i})).filter(e => e.start >= 0).sort((a,b) => a.start - b.start);
+  const list = errs.map((e,i) => ({...e, i})).filter(e => e.start >= 0 && !e.skipped).sort((a,b) => a.start - b.start);
   let out = "", pos = 0;
   for (const e of list){
     if (e.start < pos) continue; // 겹치면 건너뜀
@@ -204,7 +218,7 @@ function startWriting(){
   S.name = ($("#name")?.value || S.name).trim();
   if (!S.name){ S.msg = "이름을 써 주세요."; return render(); }
   if (!S.grade){ S.msg = "학년을 골라 주세요."; return render(); }
-  S.msg = ""; S.phase = S.attempts.length ? (S.attempts[S.attempts.length-1].errors.length ? "result" : "done") : "write";
+  S.msg = ""; S.phase = S.attempts.length ? (active(S.attempts[S.attempts.length-1].errors).length ? "result" : "done") : "write";
   render(); afterRender();
 }
 function wc(){
@@ -224,8 +238,17 @@ function flash(i){
   li.classList.add("flash"); setTimeout(() => li.classList.remove("flash"), 1200);
 }
 function finish(){ S.phase = "done"; S.rewriting = false; render(); window.scrollTo(0,0); }
+function skipErr(i, on){
+  const e = S.attempts[S.attempts.length-1].errors[i];
+  e.skipped = on;
+  const w = e.wrong.trim();
+  if (on){ if (!S.skips.includes(w)) S.skips.push(w); }
+  else S.skips = S.skips.filter(x => x !== w);
+  render();
+}
 function newWriting(){
-  if (!confirm("새 글을 쓸까요? 지금 글은 지워져요. (복사했는지 확인!)")) return;
+  const has = S.attempts.length || ($("#txt")?.value || S.draft || "").trim();
+  if (has && !confirm("새 글을 쓸까요? 지금 글은 지워져요. (복사했는지 확인!)")) return;
   S = fresh(S); S.phase = "write"; render(); wc();
 }
 
@@ -242,6 +265,7 @@ async function submitText(){
     if (r.notEnglish){ S.msg = "영어 문장으로 써 주세요."; return; }
     let errs = (r.errors || [])
       .filter(e => e && e.wrong && e.correct && e.wrong.trim() !== e.correct.trim())
+      .filter(e => !S.skips.includes(e.wrong.trim()))
       .map(e => ({wrong: e.wrong, correct: e.correct, hint: e.hint || "이 부분을 다시 살펴볼까요?"}));
     locate(text, errs);
     S.attempts.push({text, errors: errs, good: r.good || ""});
@@ -276,7 +300,7 @@ async function check(text){
     });
     const r = await Promise.race([fetch(CHECK_URL, {
       method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({text, grade: S.grade})
+      body: JSON.stringify({text, grade: S.grade, skip: S.skips.slice(-30)})
     }), stop]);
     clearTimeout(timer);
     const j = await r.json().catch(() => ({}));
@@ -298,7 +322,7 @@ async function check(text){
 function copyText(){
   const first = S.attempts[0], last = S.attempts[S.attempts.length-1];
   const d = new Date(), date = `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.`;
-  const re = S.attempts.length - 1;
+  const re = S.attempts.length - 1, leftN = active(last.errors).length, sk = S.skips.length;
   return [
     `[영어 글쓰기] ${S.grade}학년 ${S.name} (${date})`,
     ``,
@@ -308,7 +332,8 @@ function copyText(){
     `■ 고친 글`,
     last.text,
     ``,
-    re ? `(다시 쓴 횟수: ${re}번${last.errors.length ? `, 남은 고칠 곳: ${last.errors.length}개` : ""})` : `(처음부터 틀린 곳 없이 완성!)`
+    (re ? `(다시 쓴 횟수: ${re}번${leftN ? `, 남은 고칠 곳: ${leftN}개` : ""}` : `(${leftN ? `남은 고칠 곳: ${leftN}개` : "처음부터 틀린 곳 없이 완성!"}`)
+      + (sk ? `, AI 지적 넘김: ${sk}개 - ${S.skips.join(" / ")})` : ")")
   ].join("\n");
 }
 async function copyAll(){

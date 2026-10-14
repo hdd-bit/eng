@@ -35,7 +35,7 @@ function maxErrors(g: number, words: number) {
   return Math.min(20, base + Math.floor(words / 40) * 2);
 }
 
-function sysPrompt(g: number, cap: number) {
+function sysPrompt(g: number, cap: number, skip: string[]) {
   return `너는 한국 초등학교 ${g}학년 학생의 영어 글을 봐 주는 친절한 선생님이야.
 학생 글에서 '틀린 것'만 찾아. ${scope(g)}
 
@@ -54,7 +54,8 @@ function sysPrompt(g: number, cap: number) {
   나쁜 예) "the를 빼야 해요", "went로 바꿔요"
 - 같은 실수가 여러 번 나오면 각각 따로 적는다(상한 안에서). 글에 나오는 순서대로 적는다.
 - good: 이 글에서 잘한 점 한 가지를 한국어로 칭찬하는 짧은 한 문장.
-- 글이 영어가 아니면 notEnglish를 true로 하고 errors는 빈 배열.`;
+- 글이 영어가 아니면 notEnglish를 true로 하고 errors는 빈 배열.${skip.length ? `
+- 학생이 '맞게 쓴 것'이라고 넘긴 표현들이야. 이 표현과 같은 부분은 다시 지적하지 마: ${skip.map((x) => `"${x}"`).join(", ")}` : ""}`;
 }
 
 const SCHEMA = {
@@ -86,11 +87,12 @@ Deno.serve(async (req: Request) => {
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) return json({ error: "NOKEY", detail: "GEMINI_API_KEY 비밀이 없음" }, 500, h);
 
-  let text = "", grade = 3;
+  let text = "", grade = 3, skip: string[] = [];
   try {
     const b = await req.json();
     text = String(b.text ?? "").trim().slice(0, MAX_CHARS);
     grade = Math.min(6, Math.max(1, Number(b.grade) || 3));
+    if (Array.isArray(b.skip)) skip = b.skip.slice(0, 30).map((x: unknown) => String(x).replace(/["\n]/g, " ").slice(0, 60)).filter(Boolean);
   } catch {
     return json({ error: "BAD", detail: "잘못된 요청" }, 400, h);
   }
@@ -102,7 +104,7 @@ Deno.serve(async (req: Request) => {
   let last = "ERR", detail = "";
   for (const { id, think } of MODELS) {
     const body = {
-      systemInstruction: { parts: [{ text: sysPrompt(grade, cap) }] },
+      systemInstruction: { parts: [{ text: sysPrompt(grade, cap, skip) }] },
       contents: [{ role: "user", parts: [{ text }] }],
       generationConfig: {
         temperature: 0.2,
