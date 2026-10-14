@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>영어 글쓰기 연습</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f3ec; --card:#ffffff; --ink:#23262b; --sub:#6b6f76; --line:#e6e1d6;
+  --main:#2f7d6d; --main-d:#21604f; --main-l:#e3f1ec;
+  --red:#d9433f; --red-l:#fdecea; --green:#2e8b57; --yellow:#fff6d6;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font-family:"Gowun Dodum","Nunito",system-ui,sans-serif;font-size:18px;line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:28px;margin:8px 0 4px}
+h2{font-size:21px;margin:0 0 12px}
+.top p{margin:0;color:var(--sub)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-top:16px;box-shadow:0 2px 0 rgba(0,0,0,.03)}
+label{display:block;font-weight:700;margin:10px 0 6px}
+input[type=text],input[type=password]{width:100%;font:inherit;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:#fff}
+input:focus,textarea:focus{outline:none;border-color:var(--main)}
+textarea{width:100%;min-height:220px;font-family:"Nunito",sans-serif;font-size:21px;line-height:1.7;padding:14px 16px;border:2px solid var(--line);border-radius:14px;resize:vertical;background:#fffef9}
+.grades{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;padding:10px 16px;border-radius:999px;border:2px solid var(--line);background:#fff;cursor:pointer}
+.chip.on{background:var(--main);border-color:var(--main);color:#fff}
+button{font:inherit;cursor:pointer}
+.big{display:block;width:100%;margin-top:16px;padding:15px;border:0;border-radius:14px;background:var(--main);color:#fff;font-size:20px;font-weight:700}
+.big:hover{background:var(--main-d)}
+.big:disabled{opacity:.5;cursor:default}
+.ghost{display:block;width:100%;margin-top:10px;padding:13px;border:2px solid var(--line);border-radius:14px;background:#fff;color:var(--sub)}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--sub);font-size:16px}
+.bar b{color:var(--ink)}
+.count{text-align:right;color:var(--sub);font-size:15px;margin-top:4px}
+.msg small{display:block;opacity:.7;font-size:13px;margin-top:4px;word-break:break-all}
+.msg{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--red-l);color:#8a2320;font-size:16px}
+.good{background:var(--yellow);border-radius:12px;padding:10px 14px;margin:0 0 14px}
+.paper{font-family:"Nunito",sans-serif;font-size:21px;line-height:2.3;white-space:pre-wrap;word-break:break-word;background:#fffef9;border:2px dashed var(--line);border-radius:14px;padding:12px 16px}
+.err{cursor:pointer;position:relative}
+.err s{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:3px;background:var(--red-l);border-radius:4px;padding:0 2px}
+.err sup{display:inline-block;min-width:20px;height:20px;line-height:20px;text-align:center;font-size:12px;font-weight:800;color:#fff;background:var(--red);border-radius:999px;margin-left:2px;vertical-align:super}
+.err ins{text-decoration:none;color:var(--green);font-weight:800;margin-left:4px}
+.hints{list-style:none;padding:0;margin:16px 0 0}
+.hints li{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:12px;border:1px solid var(--line);margin-bottom:8px;transition:background .3s}
+.hints li.flash{background:var(--yellow)}
+.num{flex:none;width:28px;height:28px;border-radius:999px;background:var(--red);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:"Nunito",sans-serif}
+.hints p{margin:0}
+.hints .body{flex:1}
+.ansbtn{margin-top:8px;padding:6px 14px;border-radius:10px;border:2px solid var(--main);background:#fff;color:var(--main);font-weight:700;font-size:16px}
+.ansbtn:disabled{border-color:var(--line);color:#a3a6ab;cursor:default}
+.ans{margin-top:8px !important;font-family:"Nunito",sans-serif}
+.ans s{color:var(--red)}
+.ans b{color:var(--green)}
+.note{color:var(--sub);font-size:15px;margin:8px 0 0}
+.two{display:grid;gap:12px}
+.box h3{margin:0 0 6px;font-size:17px;color:var(--sub)}
+.box .paper{line-height:1.8}
+.copied{background:var(--green) !important}
+.done-top{text-align:center}
+.done-top .emoji{font-size:54px}
+details{margin-top:24px;color:var(--sub);font-size:15px}
+details summary{cursor:pointer}
+.loading{position:fixed;inset:0;background:rgba(246,243,236,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:10;font-size:20px}
+.spin{width:52px;height:52px;border:6px solid var(--main-l);border-top-color:var(--main);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading[hidden]{display:none}
+@media (min-width:700px){.two{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="loading" id="loading" hidden><div class="spin"></div><div>꼼꼼히 읽고 있어요… <span id="sec"></span></div><button class="ghost" style="width:auto;padding:8px 18px" onclick="cancelCheck()">그만 기다리기</button></div>
+<script>
+/* =========================================================
+   ★ 선생님 설정 ★
+   Google AI Studio(https://aistudio.google.com/apikey)에서 만든
+   Gemini API 키를 아래 따옴표 안에 붙여넣으세요.
+   비워 두면 첫 화면 아래 '선생님 설정'에서 기기마다 입력할 수 있어요.
+   ========================================================= */
+const API_KEY = "";
+// 앞에서부터 시도, 안 되면 다음 모델로. think: 생각 단계(낮을수록 빠름), null이면 모델 기본값
+const MODELS = [
+  {id: "gemini-3.5-flash-lite", think: null},      // 가장 빠름 (기본 생각 최소)
+  {id: "gemini-3.6-flash",      think: "minimal"},
+  {id: "gemini-3.8-flash",      think: "low"},
+  {id: "gemini-flash-latest",   think: "low"}
+];
+
+const LS = "ewrite_v1", LS_KEY = "ewrite_key";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function fresh(keep){ return {name: keep?.name || "", grade: keep?.grade || 0, phase: "start", attempts: [], rewriting: false, draft: "", msg: ""}; }
+function load(){ try{ return JSON.parse(localStorage.getItem(LS)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
+function getKey(){ if (API_KEY) return API_KEY; try{ return localStorage.getItem(LS_KEY) || ""; }catch(e){ return ""; } }
+let S = load() || fresh();
+S.msg = "";
+
+/* ---------------- 화면 ---------------- */
+function render(){
+  const v = {start: vStart, write: vWrite, result: vResult, done: vDone}[S.phase] || vStart;
+  $("#app").innerHTML = v();
+  save();
+}
+
+function vStart(){
+  return `
+  <header class="top">
+    <h1>✏️ 영어 글쓰기 연습</h1>
+    <p>영어로 글을 쓰면 틀린 곳을 찾아서 힌트를 줘요.</p>
+  </header>
+  <section class="card">
+    <label for="name">이름</label>
+    <input type="text" id="name" maxlength="20" placeholder="이름을 써요" value="${esc(S.name)}" oninput="S.name=this.value;save()">
+    <label>학년</label>
+    <div class="grades">${[1,2,3,4,5,6].map(g => `<button class="chip ${S.grade===g?"on":""}" onclick="pickGrade(${g})">${g}학년</button>`).join("")}</div>
+    ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
+    <button class="big" onclick="startWriting()">시작하기</button>
+  </section>
+  ${API_KEY ? "" : `
+  <details ${getKey() ? "" : "open"}>
+    <summary>선생님 설정 (API 키)</summary>
+    <p>${getKey() ? "✅ 이 기기에 키가 저장되어 있어요." : "아직 키가 없어요. 이 기기에서만 쓰도록 저장돼요."}</p>
+    <input type="password" id="k" placeholder="Gemini API 키 붙여넣기">
+    <button class="ghost" onclick="saveKey()">이 기기에 저장</button>
+  </details>`}`;
+}
+
+function vWrite(){
+  return `
+  <div class="bar"><span><b>${esc(S.name)}</b> · ${S.grade}학년</span><button class="chip" onclick="goStart()">이름 바꾸기</button></div>
+  <section class="card">
+    <h2>📝 영어로 자유롭게 써 보세요</h2>
+    <textarea id="txt" maxlength="1500" placeholder="Write in English here." oninput="S.draft=this.value;save();wc()">${esc(S.draft)}</textarea>
+    <div class="count" id="wc"></div>
+    ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
+    <button class="big" onclick="submitText()">제출하기</button>
+  </section>`;
+}
+
+function vResult(){
+  const n = S.attempts.length, cur = S.attempts[n-1], errs = cur.errors;
+  const unlocked = n >= 2;
+  return `
+  <div class="bar"><span><b>${esc(S.name)}</b> · ${S.grade}학년</span><span>${n}번째 글</span></div>
+  <section class="card">
+    <h2>🔍 고칠 곳이 ${errs.length}개 있어요</h2>
+    ${cur.good ? `<p class="good">👍 ${esc(cur.good)}</p>` : ""}
+    <div class="paper">${markText(cur.text, errs)}</div>
+    <ol class="hints">
+      ${errs.map((e,i) => `
+      <li id="h${i}">
+        <span class="num">${i+1}</span>
+        <div class="body">
+          <p>${esc(e.hint)}</p>
+          ${!unlocked ? `<button class="ansbtn" disabled>🔒 정답 보기</button>`
+            : e.shown ? `<p class="ans">✅ <s>${esc(e.wrong)}</s> → <b>${esc(e.correct)}</b></p>`
+            : `<button class="ansbtn" onclick="showAns(${i})">정답 보기</button>`}
+        </div>
+      </li>`).join("")}
+    </ol>
+    ${!unlocked ? `<p class="note">🔒 정답은 한 번 다시 적어 본 뒤에 볼 수 있어요. 힌트를 보고 스스로 고쳐 보세요!</p>` : ""}
+  </section>
+  ${S.rewriting ? `
+  <section class="card" id="rw">
+    <h2>✍️ 처음부터 다시 적어 보세요</h2>
+    <textarea id="txt" maxlength="1500" placeholder="Write it again in English." oninput="S.draft=this.value;save();wc()">${esc(S.draft)}</textarea>
+    <div class="count" id="wc"></div>
+    ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
+    <button class="big" onclick="submitText()">다시 제출하기</button>
+  </section>` : `
+  ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
+  <button class="big" onclick="startRewrite()">✍️ 다시 적기</button>
+  ${unlocked ? `<button class="ghost" onclick="finish()">이대로 마치기</button>` : ""}`}`;
+}
+
+function vDone(){
+  const first = S.attempts[0], last = S.attempts[S.attempts.length-1];
+  const left = last.errors.length;
+  return `
+  <section class="card done-top">
+    <div class="emoji">${left ? "👏" : "🎉"}</div>
+    <h2>${left ? "열심히 고쳤어요!" : "완성! 틀린 곳이 없어요"}</h2>
+    <p class="note">아래 [복사하기]를 누르고, 구글 클래스룸 과제에 붙여넣어 선생님께 보내요.</p>
+    <button class="big" id="cp" onclick="copyAll()">📋 처음 글 + 고친 글 복사하기</button>
+  </section>
+  <section class="card two">
+    <div class="box"><h3>처음 쓴 글</h3><div class="paper">${esc(first.text)}</div></div>
+    <div class="box"><h3>고친 글</h3><div class="paper">${esc(last.text)}</div></div>
+  </section>
+  <button class="ghost" onclick="newWriting()">새 글 쓰기</button>`;
+}
+
+/* ---------------- 틀린 곳 표시 ---------------- */
+function locate(text, errs){
+  let from = 0;
+  errs.forEach(e => {
+    let i = text.indexOf(e.wrong, from);
+    if (i < 0) i = text.indexOf(e.wrong);
+    e.start = i;
+    if (i >= 0) from = i + e.wrong.length;
+  });
+}
+function markText(text, errs){
+  const list = errs.map((e,i) => ({...e, i})).filter(e => e.start >= 0).sort((a,b) => a.start - b.start);
+  let out = "", pos = 0;
+  for (const e of list){
+    if (e.start < pos) continue; // 겹치면 건너뜀
+    out += esc(text.slice(pos, e.start));
+    out += `<span class="err" onclick="flash(${e.i})"><s>${esc(e.wrong)}</s><sup>${e.i+1}</sup>${e.shown ? `<ins>${esc(e.correct)}</ins>` : ""}</span>`;
+    pos = e.start + e.wrong.length;
+  }
+  return out + esc(text.slice(pos));
+}
+
+/* ---------------- 동작 ---------------- */
+function pickGrade(g){ S.grade = g; S.msg = ""; render(); }
+function goStart(){ S.phase = "start"; S.msg = ""; render(); }
+function saveKey(){
+  const v = $("#k").value.trim(); if (!v) return;
+  try{ localStorage.setItem(LS_KEY, v); }catch(e){}
+  S.msg = ""; render();
+}
+function startWriting(){
+  S.name = ($("#name")?.value || S.name).trim();
+  if (!S.name){ S.msg = "이름을 써 주세요."; return render(); }
+  if (!S.grade){ S.msg = "학년을 골라 주세요."; return render(); }
+  if (!getKey()){ S.msg = "선생님께 API 키 설정을 부탁해 주세요."; return render(); }
+  S.msg = ""; S.phase = S.attempts.length ? (S.attempts[S.attempts.length-1].errors.length ? "result" : "done") : "write";
+  render(); afterRender();
+}
+function wc(){
+  const t = ($("#txt")?.value || "").trim();
+  const w = t ? t.split(/\s+/).length : 0;
+  const el = $("#wc"); if (el) el.textContent = `${w}단어`;
+}
+function afterRender(){ wc(); }
+function startRewrite(){
+  S.rewriting = true; S.draft = ""; S.msg = ""; render(); wc();
+  $("#rw")?.scrollIntoView({behavior: "smooth"}); setTimeout(() => $("#txt")?.focus(), 300);
+}
+function showAns(i){ S.attempts[S.attempts.length-1].errors[i].shown = true; render(); }
+function flash(i){
+  const li = $("#h"+i); if (!li) return;
+  li.scrollIntoView({behavior: "smooth", block: "center"});
+  li.classList.add("flash"); setTimeout(() => li.classList.remove("flash"), 1200);
+}
+function finish(){ S.phase = "done"; S.rewriting = false; render(); window.scrollTo(0,0); }
+function newWriting(){
+  if (!confirm("새 글을 쓸까요? 지금 글은 지워져요. (복사했는지 확인!)")) return;
+  S = fresh(S); S.phase = "write"; render(); wc();
+}
+
+async function submitText(){
+  const text = ($("#txt")?.value || "").trim();
+  S.draft = text;
+  if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text)){ S.msg = "영어로만 써 주세요. 한글이 들어 있어요."; return render(), wc(); }
+  if (text.split(/\s+/).filter(Boolean).length < 2){ S.msg = "조금 더 써 볼까요? 두 단어 이상 써 주세요."; return render(), wc(); }
+  $("#loading").hidden = false;
+  const t0 = Date.now(); $("#sec").textContent = "";
+  const tick = setInterval(() => { $("#sec").textContent = Math.floor((Date.now()-t0)/1000) + "초"; }, 500);
+  try{
+    const r = await check(text);
+    if (r.notEnglish){ S.msg = "영어 문장으로 써 주세요."; return; }
+    let errs = (r.errors || [])
+      .filter(e => e && e.wrong && e.correct && e.wrong.trim() !== e.correct.trim())
+      .map(e => ({wrong: e.wrong, correct: e.correct, hint: e.hint || "이 부분을 다시 살펴볼까요?"}));
+    locate(text, errs);
+    S.attempts.push({text, errors: errs, good: r.good || ""});
+    S.draft = ""; S.msg = ""; S.rewriting = false;
+    S.phase = errs.length ? "result" : "done";
+    window.scrollTo(0,0);
+  }catch(e){
+    const m = String(e.message || e);
+    S.msg = (m === "BUSY" ? "지금 쓰는 친구가 많아요. 10초쯤 기다렸다가 다시 눌러 주세요."
+          : m === "NOKEY" ? "선생님께 API 키 설정을 부탁해 주세요."
+          : m === "CANCEL" ? "검사를 멈췄어요. 다시 눌러 주세요."
+          : m === "TIMEOUT" ? "답이 너무 늦게 와요. 인터넷을 확인하고 다시 눌러 주세요."
+          : m.startsWith("KEY") ? "API 키에 문제가 있어요. 선생님께 알려 주세요."
+          : "검사하다가 문제가 생겼어요. 다시 눌러 주세요.")
+          + (lastDetail ? `<small>${esc(lastDetail)}</small>` : "");
+  }finally{
+    clearInterval(tick); $("#loading").hidden = true; render(); wc();
+  }
+}
+
+/* ---------------- AI 검사 ---------------- */
+function guide(g){
+  if (g <= 2) return "아주 기초만 봐. 문장 첫 글자 대문자, 문장 끝 마침표/물음표, 나를 뜻하는 I는 대문자, 쉬운 단어 철자, 단어 사이 띄어쓰기. 고칠 곳은 최대 3개, 가장 중요한 것부터.";
+  if (g <= 4) return "기초 + 초급 문법을 봐. 대문자, 문장부호, 철자, 띄어쓰기, a/an, 복수형 -s, be동사(am/is/are), 기본 현재/과거 시제. 고칠 곳은 최대 5개, 가장 중요한 것부터.";
+  return "기초 + 문법을 봐. 대문자, 문장부호, 철자, 띄어쓰기, 시제, 주어-동사 수 일치, 관사(a/an/the), 전치사, 어순, 빠진 단어. 고칠 곳은 최대 8개, 가장 중요한 것부터.";
+}
+function sysPrompt(g){
+  return `너는 한국 초등학교 ${g}학년 학생의 영어 글을 봐 주는 친절한 선생님이야.
+학생 글에서 '틀린 것'만 찾아. ${guide(g)}
+
+규칙:
+- 실제로 틀린 것만 고른다. 더 자연스러운 표현 제안, 내용 평가, 문체 바꾸기는 하지 않는다. 고유명사나 이름은 건드리지 않는다.
+- wrong: 학생 글에서 '그대로 복사한' 부분. 대소문자·문장부호·띄어쓰기까지 똑같이. 틀린 곳이 들어간 가장 짧은 덩어리(1~4단어).
+- correct: wrong을 바르게 고친 것.
+- 문장 끝 문장부호가 빠졌으면 wrong은 그 문장의 마지막 단어, correct는 그 단어+문장부호.
+- 단어가 빠졌으면 wrong은 빠진 자리 앞뒤 단어, correct는 빠진 단어를 넣은 것.
+- hint: 한국어로만. 정답이나 고친 단어를 직접 말하지 말고, 스스로 찾을 수 있게 묻는 말로. ${g}학년이 알아듣는 쉬운 말, 35자 이내. 예) "문장을 시작할 때 첫 글자는 어떻게 써야 할까요?", "어제 일이에요. 동사 모양을 살펴볼까요?"
+- 같은 실수가 여러 번 나오면 각각 따로 적는다. 글에 나오는 순서대로 적는다.
+- good: 이 글에서 잘한 점 한 가지를 한국어로 칭찬하는 짧은 한 문장.
+- 글이 영어가 아니면 notEnglish를 true로 하고 errors는 빈 배열.`;
+}
+const SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    notEnglish: {type: "BOOLEAN"},
+    good: {type: "STRING"},
+    errors: {type: "ARRAY", items: {type: "OBJECT",
+      properties: {wrong: {type: "STRING"}, correct: {type: "STRING"}, hint: {type: "STRING"}},
+      required: ["wrong", "correct", "hint"]}}
+  },
+  required: ["errors", "good"]
+};
+let ctrl = null, lastDetail = "";
+function cancelCheck(){ if (ctrl){ ctrl.cancelled = true; ctrl.abort(); } }
+async function check(text){
+  lastDetail = "";
+  const k = getKey(); if (!k) throw new Error("NOKEY");
+  let last = "ERR";
+  for (const {id: m, think} of MODELS){
+    const body = {
+      systemInstruction: {parts: [{text: sysPrompt(S.grade)}]},
+      contents: [{role: "user", parts: [{text}]}],
+      generationConfig: {temperature: 0.2, responseMimeType: "application/json", responseSchema: SCHEMA,
+                         ...(think ? {thinkingConfig: {thinkingLevel: think}} : {})}
+    };
+    ctrl = new AbortController();
+    let timer;
+    try{
+      // signal을 fetch에 넘기지 않고 경주(race)로 시간 제한 — 일부 미리보기 환경에서 signal을 못 넘김
+      const stop = new Promise((_, rej) => {
+        timer = setTimeout(() => rej(Object.assign(new Error("timeout"), {name: "AbortError"})), 20000);
+        ctrl.signal.addEventListener("abort", () => rej(Object.assign(new Error("cancel"), {name: "AbortError"})));
+      });
+      const r = await Promise.race([fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
+        method: "POST", headers: {"Content-Type": "application/json", "x-goog-api-key": k},
+        body: JSON.stringify(body)
+      }), stop]);
+      clearTimeout(timer);
+      if (!r.ok){
+        const t = await r.text().catch(() => "");
+        lastDetail = `${m} · ${r.status} · ${t.replace(/\s+/g," ").slice(0,160)}`;
+        if (r.status === 429 || r.status >= 500){ last = "BUSY"; continue; }
+        if (r.status === 401 || r.status === 403 || (r.status === 400 && /api.?key/i.test(t))) throw new Error("KEY " + r.status);
+        last = "HTTP " + r.status; continue;
+      }
+      const j = await r.json();
+      const t = (j.candidates?.[0]?.content?.parts || []).filter(p => !p.thought).map(p => p.text || "").join("");
+      if (!t){ lastDetail = `${m} · 빈 응답 · ${j.candidates?.[0]?.finishReason || j.promptFeedback?.blockReason || ""}`; last = "ERR"; continue; }
+      return JSON.parse(t);
+    }catch(e){
+      clearTimeout(timer);
+      if (String(e.message).startsWith("KEY")) throw e;
+      if (e.name === "AbortError"){
+        if (ctrl.cancelled) throw new Error("CANCEL");
+        lastDetail = `${m} · 20초 안에 답이 없음`; last = "TIMEOUT"; continue;
+      }
+      lastDetail = `${m} · ${e.message}`;
+      last = last === "BUSY" ? "BUSY" : (e.message || "ERR");
+    }
+  }
+  throw new Error(last);
+}
+
+/* ---------------- 복사 ---------------- */
+function copyText(){
+  const first = S.attempts[0], last = S.attempts[S.attempts.length-1];
+  const d = new Date(), date = `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.`;
+  const re = S.attempts.length - 1;
+  return [
+    `[영어 글쓰기] ${S.grade}학년 ${S.name} (${date})`,
+    ``,
+    `■ 처음 쓴 글`,
+    first.text,
+    ``,
+    `■ 고친 글`,
+    last.text,
+    ``,
+    re ? `(다시 쓴 횟수: ${re}번${last.errors.length ? `, 남은 고칠 곳: ${last.errors.length}개` : ""})` : `(처음부터 틀린 곳 없이 완성!)`
+  ].join("\n");
+}
+async function copyAll(){
+  const t = copyText(); let ok = false;
+  try{ await navigator.clipboard.writeText(t); ok = true; }catch(e){
+    const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta);
+    ta.select(); try{ ok = document.execCommand("copy"); }catch(_){} ta.remove();
+  }
+  const b = $("#cp");
+  if (b){ b.textContent = ok ? "✅ 복사됐어요! 클래스룸에 붙여넣기 하세요" : "복사가 안 됐어요. 다시 눌러 주세요"; if (ok) b.classList.add("copied"); }
+}
+
+render(); wc();
+</script>
+</body>
+</html>
