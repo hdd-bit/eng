@@ -115,7 +115,7 @@ function vWrite(){
   <div class="bar"><span><b>${esc(S.name)}</b> · ${S.grade}학년</span><button class="chip" onclick="goStart()">이름 바꾸기</button></div>
   <section class="card">
     <h2>📝 영어로 자유롭게 써 보세요</h2>
-    <textarea id="txt" maxlength="1500" placeholder="Write in English here." oninput="S.draft=this.value;save();wc()">${esc(S.draft)}</textarea>
+    <textarea id="txt" maxlength="3000" placeholder="Write in English here." oninput="S.draft=this.value;save();wc()">${esc(S.draft)}</textarea>
     <div class="count" id="wc"></div>
     ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
     <button class="big" onclick="submitText()">제출하기</button>
@@ -148,7 +148,7 @@ function vResult(){
   ${S.rewriting ? `
   <section class="card" id="rw">
     <h2>✍️ 처음부터 다시 적어 보세요</h2>
-    <textarea id="txt" maxlength="1500" placeholder="Write it again in English." oninput="S.draft=this.value;save();wc()">${esc(S.draft)}</textarea>
+    <textarea id="txt" maxlength="3000" placeholder="Write it again in English." oninput="S.draft=this.value;save();wc()">${esc(S.draft)}</textarea>
     <div class="count" id="wc"></div>
     ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
     <button class="big" onclick="submitText()">다시 제출하기</button>
