@@ -190,11 +190,23 @@ function vDone(){
 }
 
 /* ---------------- 틀린 곳 표시 ---------------- */
+// 단어 중간이 아니라 '단어 단위'로 찾기 (예: i 가 friend 속 i에 걸리지 않게)
+function findWord(text, w, from){
+  const isW = c => /[A-Za-z0-9']/.test(c || "");
+  let i = text.indexOf(w, from);
+  while (i >= 0){
+    const okL = !isW(w[0]) || !isW(text[i-1]);
+    const okR = !isW(w[w.length-1]) || !isW(text[i+w.length]);
+    if (okL && okR) return i;
+    i = text.indexOf(w, i+1);
+  }
+  return -1;
+}
 function locate(text, errs){
   let from = 0;
   errs.forEach(e => {
-    let i = text.indexOf(e.wrong, from);
-    if (i < 0) i = text.indexOf(e.wrong);
+    let i = findWord(text, e.wrong, from);
+    if (i < 0) i = findWord(text, e.wrong, 0);
     e.start = i;
     if (i >= 0) from = i + e.wrong.length;
   });
