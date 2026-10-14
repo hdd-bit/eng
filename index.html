@@ -74,29 +74,16 @@ details summary{cursor:pointer}
 <div class="wrap" id="app"></div>
 <div class="loading" id="loading" hidden><div class="spin"></div><div>꼼꼼히 읽고 있어요… <span id="sec"></span></div><button class="ghost" style="width:auto;padding:8px 18px" onclick="cancelCheck()">그만 기다리기</button></div>
 <script>
-/* =========================================================
-   ★ 선생님 설정 ★
-   Google AI Studio(https://aistudio.google.com/apikey)에서 만든
-   Gemini API 키를 아래 따옴표 안에 붙여넣으세요.
-   비워 두면 첫 화면 아래 '선생님 설정'에서 기기마다 입력할 수 있어요.
-   ========================================================= */
-const API_KEY = "";
-// 앞에서부터 시도, 안 되면 다음 모델로. think: 생각 단계(낮을수록 빠름), null이면 모델 기본값
-const MODELS = [
-  {id: "gemini-3.5-flash-lite", think: null},      // 가장 빠름 (기본 생각 최소)
-  {id: "gemini-3.6-flash",      think: "minimal"},
-  {id: "gemini-3.8-flash",      think: "low"},
-  {id: "gemini-flash-latest",   think: "low"}
-];
+/* 검사는 Supabase의 eng-check(중간 다리)가 맡아요. Gemini 키는 Supabase 비밀(GEMINI_API_KEY)에만 있어요. */
+const CHECK_URL = "https://oxlmwkvbgxszuhguwxif.supabase.co/functions/v1/eng-check";
 
-const LS = "ewrite_v1", LS_KEY = "ewrite_key";
+const LS = "ewrite_v1";
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 function fresh(keep){ return {name: keep?.name || "", grade: keep?.grade || 0, phase: "start", attempts: [], rewriting: false, draft: "", msg: ""}; }
 function load(){ try{ return JSON.parse(localStorage.getItem(LS)); }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); }catch(e){} }
-function getKey(){ if (API_KEY) return API_KEY; try{ return localStorage.getItem(LS_KEY) || ""; }catch(e){ return ""; } }
 let S = load() || fresh();
 S.msg = "";
 
@@ -120,14 +107,7 @@ function vStart(){
     <div class="grades">${[1,2,3,4,5,6].map(g => `<button class="chip ${S.grade===g?"on":""}" onclick="pickGrade(${g})">${g}학년</button>`).join("")}</div>
     ${S.msg ? `<div class="msg">${S.msg}</div>` : ""}
     <button class="big" onclick="startWriting()">시작하기</button>
-  </section>
-  ${API_KEY ? "" : `
-  <details ${getKey() ? "" : "open"}>
-    <summary>선생님 설정 (API 키)</summary>
-    <p>${getKey() ? "✅ 이 기기에 키가 저장되어 있어요." : "아직 키가 없어요. 이 기기에서만 쓰도록 저장돼요."}</p>
-    <input type="password" id="k" placeholder="Gemini API 키 붙여넣기">
-    <button class="ghost" onclick="saveKey()">이 기기에 저장</button>
-  </details>`}`;
+  </section>`;
 }
 
 function vWrite(){
@@ -220,16 +200,10 @@ function markText(text, errs){
 /* ---------------- 동작 ---------------- */
 function pickGrade(g){ S.grade = g; S.msg = ""; render(); }
 function goStart(){ S.phase = "start"; S.msg = ""; render(); }
-function saveKey(){
-  const v = $("#k").value.trim(); if (!v) return;
-  try{ localStorage.setItem(LS_KEY, v); }catch(e){}
-  S.msg = ""; render();
-}
 function startWriting(){
   S.name = ($("#name")?.value || S.name).trim();
   if (!S.name){ S.msg = "이름을 써 주세요."; return render(); }
   if (!S.grade){ S.msg = "학년을 골라 주세요."; return render(); }
-  if (!getKey()){ S.msg = "선생님께 API 키 설정을 부탁해 주세요."; return render(); }
   S.msg = ""; S.phase = S.attempts.length ? (S.attempts[S.attempts.length-1].errors.length ? "result" : "done") : "write";
   render(); afterRender();
 }
@@ -288,87 +262,36 @@ async function submitText(){
   }
 }
 
-/* ---------------- AI 검사 ---------------- */
-function guide(g){
-  if (g <= 2) return "아주 기초만 봐. 문장 첫 글자 대문자, 문장 끝 마침표/물음표, 나를 뜻하는 I는 대문자, 쉬운 단어 철자, 단어 사이 띄어쓰기. 고칠 곳은 최대 3개, 가장 중요한 것부터.";
-  if (g <= 4) return "기초 + 초급 문법을 봐. 대문자, 문장부호, 철자, 띄어쓰기, a/an, 복수형 -s, be동사(am/is/are), 기본 현재/과거 시제. 고칠 곳은 최대 5개, 가장 중요한 것부터.";
-  return "기초 + 문법을 봐. 대문자, 문장부호, 철자, 띄어쓰기, 시제, 주어-동사 수 일치, 관사(a/an/the), 전치사, 어순, 빠진 단어. 고칠 곳은 최대 8개, 가장 중요한 것부터.";
-}
-function sysPrompt(g){
-  return `너는 한국 초등학교 ${g}학년 학생의 영어 글을 봐 주는 친절한 선생님이야.
-학생 글에서 '틀린 것'만 찾아. ${guide(g)}
-
-규칙:
-- 실제로 틀린 것만 고른다. 더 자연스러운 표현 제안, 내용 평가, 문체 바꾸기는 하지 않는다. 고유명사나 이름은 건드리지 않는다.
-- wrong: 학생 글에서 '그대로 복사한' 부분. 대소문자·문장부호·띄어쓰기까지 똑같이. 틀린 곳이 들어간 가장 짧은 덩어리(1~4단어).
-- correct: wrong을 바르게 고친 것.
-- 문장 끝 문장부호가 빠졌으면 wrong은 그 문장의 마지막 단어, correct는 그 단어+문장부호.
-- 단어가 빠졌으면 wrong은 빠진 자리 앞뒤 단어, correct는 빠진 단어를 넣은 것.
-- hint: 한국어로만. 정답이나 고친 단어를 직접 말하지 말고, 스스로 찾을 수 있게 묻는 말로. ${g}학년이 알아듣는 쉬운 말, 35자 이내. 예) "문장을 시작할 때 첫 글자는 어떻게 써야 할까요?", "어제 일이에요. 동사 모양을 살펴볼까요?"
-- 같은 실수가 여러 번 나오면 각각 따로 적는다. 글에 나오는 순서대로 적는다.
-- good: 이 글에서 잘한 점 한 가지를 한국어로 칭찬하는 짧은 한 문장.
-- 글이 영어가 아니면 notEnglish를 true로 하고 errors는 빈 배열.`;
-}
-const SCHEMA = {
-  type: "OBJECT",
-  properties: {
-    notEnglish: {type: "BOOLEAN"},
-    good: {type: "STRING"},
-    errors: {type: "ARRAY", items: {type: "OBJECT",
-      properties: {wrong: {type: "STRING"}, correct: {type: "STRING"}, hint: {type: "STRING"}},
-      required: ["wrong", "correct", "hint"]}}
-  },
-  required: ["errors", "good"]
-};
+/* ---------------- AI 검사 (Supabase 중간 다리) ---------------- */
 let ctrl = null, lastDetail = "";
 function cancelCheck(){ if (ctrl){ ctrl.cancelled = true; ctrl.abort(); } }
 async function check(text){
   lastDetail = "";
-  const k = getKey(); if (!k) throw new Error("NOKEY");
-  let last = "ERR";
-  for (const {id: m, think} of MODELS){
-    const body = {
-      systemInstruction: {parts: [{text: sysPrompt(S.grade)}]},
-      contents: [{role: "user", parts: [{text}]}],
-      generationConfig: {temperature: 0.2, responseMimeType: "application/json", responseSchema: SCHEMA,
-                         ...(think ? {thinkingConfig: {thinkingLevel: think}} : {})}
-    };
-    ctrl = new AbortController();
-    let timer;
-    try{
-      // signal을 fetch에 넘기지 않고 경주(race)로 시간 제한 — 일부 미리보기 환경에서 signal을 못 넘김
-      const stop = new Promise((_, rej) => {
-        timer = setTimeout(() => rej(Object.assign(new Error("timeout"), {name: "AbortError"})), 20000);
-        ctrl.signal.addEventListener("abort", () => rej(Object.assign(new Error("cancel"), {name: "AbortError"})));
-      });
-      const r = await Promise.race([fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
-        method: "POST", headers: {"Content-Type": "application/json", "x-goog-api-key": k},
-        body: JSON.stringify(body)
-      }), stop]);
-      clearTimeout(timer);
-      if (!r.ok){
-        const t = await r.text().catch(() => "");
-        lastDetail = `${m} · ${r.status} · ${t.replace(/\s+/g," ").slice(0,160)}`;
-        if (r.status === 429 || r.status >= 500){ last = "BUSY"; continue; }
-        if (r.status === 401 || r.status === 403 || (r.status === 400 && /api.?key/i.test(t))) throw new Error("KEY " + r.status);
-        last = "HTTP " + r.status; continue;
-      }
-      const j = await r.json();
-      const t = (j.candidates?.[0]?.content?.parts || []).filter(p => !p.thought).map(p => p.text || "").join("");
-      if (!t){ lastDetail = `${m} · 빈 응답 · ${j.candidates?.[0]?.finishReason || j.promptFeedback?.blockReason || ""}`; last = "ERR"; continue; }
-      return JSON.parse(t);
-    }catch(e){
-      clearTimeout(timer);
-      if (String(e.message).startsWith("KEY")) throw e;
-      if (e.name === "AbortError"){
-        if (ctrl.cancelled) throw new Error("CANCEL");
-        lastDetail = `${m} · 20초 안에 답이 없음`; last = "TIMEOUT"; continue;
-      }
-      lastDetail = `${m} · ${e.message}`;
-      last = last === "BUSY" ? "BUSY" : (e.message || "ERR");
+  ctrl = new AbortController();
+  let timer;
+  try{
+    const stop = new Promise((_, rej) => {
+      timer = setTimeout(() => rej(Object.assign(new Error("timeout"), {name: "AbortError"})), 70000);
+      ctrl.signal.addEventListener("abort", () => rej(Object.assign(new Error("cancel"), {name: "AbortError"})));
+    });
+    const r = await Promise.race([fetch(CHECK_URL, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({text, grade: S.grade})
+    }), stop]);
+    clearTimeout(timer);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j.error){
+      lastDetail = j.detail || ("HTTP " + r.status);
+      if (j.error === "KEY" || j.error === "NOKEY") throw new Error("KEY");
+      throw new Error(j.error || "ERR");
     }
+    return j;
+  }catch(e){
+    clearTimeout(timer);
+    if (e.name === "AbortError") throw new Error(ctrl.cancelled ? "CANCEL" : "TIMEOUT");
+    if (!lastDetail) lastDetail = e.message;
+    throw e;
   }
-  throw new Error(last);
 }
 
 /* ---------------- 복사 ---------------- */
